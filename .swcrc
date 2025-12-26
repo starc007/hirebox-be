@@ -1,0 +1,37 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "tsx": false,
+      "dynamicImport": true,
+      "decorators": true
+    },
+    "transform": {
+      "legacyDecorator": true,
+      "decoratorMetadata": true
+    },
+    "target": "es2017",
+    "externalHelpers": false,
+    "keepClassNames": true,
+    "loose": false,
+    "minify": {
+      "compress": false,
+      "mangle": false
+    },
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"],
+      "@config": ["config"],
+      "@api/*": ["api/*"],
+      "@services/*": ["services/*"],
+      "@utils/*": ["utils/*"],
+      "@jobs/*": ["jobs/*"],
+      "@cache/*": ["cache/*"],
+      "@types/*": ["types/*"],
+      "@features/*": ["features/*"]
+    }
+  },
+  "module": {
+    "type": "commonjs"
+  }
+}
