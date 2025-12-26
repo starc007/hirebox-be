@@ -126,3 +126,10 @@ export function sendInternalError(
 ): Response {
   return sendError(res, message, 500, "INTERNAL_ERROR", details);
 }
+
+export function sendTooManyRequests(
+  res: Response,
+  message: string = "Too many requests, please try again later"
+): Response {
+  return sendError(res, message, 429, "TOO_MANY_REQUESTS");
+}

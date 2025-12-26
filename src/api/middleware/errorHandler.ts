@@ -25,6 +25,7 @@ export function errorHandler(
     stack: err.stack,
     path: req.path,
     method: req.method,
+    requestId: res.locals.requestId,
   });
 
   sendError(

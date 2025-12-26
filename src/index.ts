@@ -9,8 +9,14 @@ import { config } from "@config/env";
 import { logger } from "@utils/logger";
 import { errorHandler } from "@api/middleware/errorHandler";
 import { notFoundHandler } from "@api/middleware/notFoundHandler";
+import { requestIdMiddleware } from "@api/middleware/requestId";
+import { timeoutMiddleware } from "@api/middleware/timeout";
+import { setupGracefulShutdown } from "@utils/gracefulShutdown";
 
 const app = express();
+
+// Request ID tracking (must be first)
+app.use(requestIdMiddleware);
 
 // Security middleware
 app.use(helmet());
@@ -23,6 +29,9 @@ app.use(
     credentials: true,
   })
 );
+
+// Request timeout
+app.use(timeoutMiddleware);
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
@@ -66,22 +75,13 @@ async function startServer() {
     // Optimize for high performance
     server.keepAliveTimeout = 65000;
     server.headersTimeout = 66000;
+
+    // Setup graceful shutdown
+    setupGracefulShutdown(server);
   } catch (error) {
     logger.error("Failed to start server:", error);
     process.exit(1);
   }
 }
-
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err: Error) => {
-  logger.error("Unhandled Promise Rejection:", err);
-  process.exit(1);
-});
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (err: Error) => {
-  logger.error("Uncaught Exception:", err);
-  process.exit(1);
-});
 
 startServer();
