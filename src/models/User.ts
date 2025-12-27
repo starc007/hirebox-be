@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export type UserRole = "admin" | "hr" | "viewer";
 export type AuthProvider = "email" | "google";
+export type HrType = "company" | "agency" | "freelance";
 
 export type UserDocument = Document & {
   email: string;
@@ -10,8 +11,13 @@ export type UserDocument = Document & {
   role: UserRole;
   provider: AuthProvider;
   providerId?: string;
-  companyId: string;
+  // HR type specific fields
+  hrType?: HrType; // Only for role === "hr"
+  companyName?: string; // For company HR
+  agencyName?: string; // For agency HR
+  companyNames?: string[]; // For freelance HR (can work with multiple companies)
   isEmailVerified: boolean;
+  isProfileComplete: boolean;
   avatar?: string;
   lastLoginAt?: Date;
   createdAt: Date;
@@ -22,7 +28,11 @@ export type UserPayload = {
   userId: string;
   email: string;
   role: UserRole;
-  companyId: string;
+  hrType?: HrType;
+  companyName?: string;
+  agencyName?: string;
+  companyNames?: string[];
+  isProfileComplete?: boolean;
 };
 
 const userSchema = new Schema<UserDocument>(
@@ -44,8 +54,9 @@ const userSchema = new Schema<UserDocument>(
     },
     name: {
       type: String,
-      required: true,
+      required: false, // Will be set during profile completion
       trim: true,
+      default: "",
     },
     role: {
       type: String,
@@ -64,14 +75,35 @@ const userSchema = new Schema<UserDocument>(
       sparse: true,
       index: true,
     },
-    companyId: {
+    hrType: {
       type: String,
-      required: true,
+      enum: ["company", "agency", "freelance"],
+      required: false, // Will be set during profile completion
+    },
+    companyName: {
+      type: String,
+      trim: true,
       index: true,
+      sparse: true,
+    },
+    agencyName: {
+      type: String,
+      trim: true,
+      index: true,
+      sparse: true,
+    },
+    companyNames: {
+      type: [String],
+      default: [],
     },
     isEmailVerified: {
       type: Boolean,
       default: false,
+    },
+    isProfileComplete: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
     avatar: {
       type: String,
@@ -86,7 +118,10 @@ const userSchema = new Schema<UserDocument>(
 );
 
 // Indexes for performance
-userSchema.index({ email: 1, companyId: 1 });
+userSchema.index({ email: 1, companyName: 1 });
+userSchema.index({ email: 1, agencyName: 1 });
 userSchema.index({ providerId: 1, provider: 1 });
+userSchema.index({ role: 1, hrType: 1 });
+userSchema.index({ companyNames: 1 }); // For freelance HR queries
 
 export const User = mongoose.model<UserDocument>("User", userSchema);

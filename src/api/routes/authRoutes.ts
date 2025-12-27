@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  register,
+  completeUserProfile,
   login,
   googleOAuth,
   googleOAuthCallback,
@@ -9,7 +9,7 @@ import {
 } from "@api/controllers/authController";
 import { validate } from "@api/middleware/validate";
 import {
-  registerSchema,
+  completeProfileSchema,
   loginSchema,
   googleOAuthCallbackSchema,
   refreshTokenSchema,
@@ -21,13 +21,6 @@ import { rateLimiters } from "@api/middleware/rateLimiter";
 const router = Router();
 
 // Public routes
-router.post(
-  "/register",
-  rateLimiters.standard,
-  validate(registerSchema),
-  asyncHandler(register)
-);
-
 router.post(
   "/login",
   rateLimiters.strict,
@@ -52,6 +45,13 @@ router.post(
 );
 
 // Protected routes
+router.post(
+  "/complete-profile",
+  authenticate,
+  validate(completeProfileSchema),
+  asyncHandler(completeUserProfile)
+);
+
 router.get("/me", authenticate, asyncHandler(getMe));
 
 export default router;

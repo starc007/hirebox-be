@@ -1,19 +1,22 @@
 import { Request, Response } from "express";
 import {
-  registerUser,
+  completeProfile,
   loginUser,
   getGoogleOAuthUrl,
   handleGoogleOAuthCallback,
   refreshAccessToken,
   getUserById,
 } from "@services/authService";
-import { sendSuccess, sendCreated } from "@services/responseService";
+import { sendSuccess } from "@services/responseService";
 import type { AuthenticatedRequest } from "@api/middleware/auth";
 
-export async function register(req: Request, res: Response): Promise<Response> {
+export async function completeUserProfile(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<Response> {
   const { body } = req;
-  const { user, tokens } = await registerUser(body);
-  return sendCreated(res, { user, ...tokens }, "User registered successfully");
+  const user = await completeProfile(req.user!.userId, body);
+  return sendSuccess(res, { user }, "Profile completed successfully");
 }
 
 export async function login(req: Request, res: Response): Promise<Response> {
