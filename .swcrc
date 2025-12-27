@@ -28,7 +28,7 @@
       "@jobs/*": ["jobs/*"],
       "@cache/*": ["cache/*"],
       "@types/*": ["types/*"],
-      "@features/*": ["features/*"]
+      "@models/*": ["models/*"]
     }
   },
   "module": {

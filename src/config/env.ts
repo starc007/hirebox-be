@@ -37,8 +37,7 @@ type EnvConfig = {
     publicUrl: string;
   };
   ai: {
-    apiKey: string;
-    serviceUrl: string;
+    geminiApiKey: string;
   };
   email: {
     fromEmail: string;
@@ -103,12 +102,11 @@ export const config: EnvConfig = {
     publicUrl: getEnvVar("R2_PUBLIC_URL"),
   },
   ai: {
-    apiKey: getEnvVar("AI_API_KEY", ""),
-    serviceUrl: getEnvVar("AI_SERVICE_URL", ""),
+    geminiApiKey: getEnvVar("GEMINI_API_KEY"),
   },
   email: {
-    fromEmail: getEnvVar("FROM_EMAIL", "noreply@hirebox.com"),
-    fromName: getEnvVar("FROM_NAME", "Hirebox"),
+    fromEmail: getEnvVar("FROM_EMAIL"),
+    fromName: getEnvVar("FROM_NAME"),
   },
   logging: {
     level: getEnvVar("LOG_LEVEL", ""),
