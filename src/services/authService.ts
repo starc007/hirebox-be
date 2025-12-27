@@ -201,7 +201,6 @@ export async function handleGoogleOAuthCallback(
       if (!user.name || user.name.trim() === "") {
         user.name = googleUser.name || "";
       }
-      user.avatar = googleUser.picture || user.avatar;
       user.isEmailVerified = true;
       user.lastLoginAt = new Date();
       await user.save();
@@ -215,7 +214,6 @@ export async function handleGoogleOAuthCallback(
         role: "hr",
         isEmailVerified: true,
         isProfileComplete: false,
-        avatar: googleUser.picture || undefined,
         lastLoginAt: new Date(),
       });
     }

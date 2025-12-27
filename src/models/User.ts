@@ -18,7 +18,6 @@ export type UserDocument = Document & {
   companyNames?: string[]; // For freelance HR (can work with multiple companies)
   isEmailVerified: boolean;
   isProfileComplete: boolean;
-  avatar?: string;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -105,9 +104,7 @@ const userSchema = new Schema<UserDocument>(
       default: false,
       index: true,
     },
-    avatar: {
-      type: String,
-    },
+
     lastLoginAt: {
       type: Date,
     },
