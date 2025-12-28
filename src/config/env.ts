@@ -14,9 +14,7 @@ type EnvConfig = {
     socketTimeoutMS: number;
   };
   redis: {
-    host: string;
-    port: number;
-    password: string | undefined;
+    cacheUrl: string;
     maxRetriesPerRequest: number;
   };
   jwt: {
@@ -62,23 +60,18 @@ export const config: EnvConfig = {
   nodeEnv: getEnvVar("NODE_ENV", "development"),
   port: parseInt(getEnvVar("PORT", "3000"), 10),
   apiVersion: getEnvVar("API_VERSION", "v1"),
-  frontendUrl: getEnvVar("FRONTEND_URL", "http://localhost:3001"),
+  frontendUrl: getEnvVar("FRONTEND_URL"),
   mongodb: {
-    uri: getEnvVar("MONGODB_URI", "mongodb://localhost:27017/hirebox"),
-    maxPoolSize: parseInt(getEnvVar("MONGODB_MAX_POOL_SIZE", "50"), 10),
+    uri: getEnvVar("MONGODB_URI"),
+    maxPoolSize: parseInt(getEnvVar("MONGODB_MAX_POOL_SIZE"), 10),
     serverSelectionTimeoutMS: parseInt(
-      getEnvVar("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "5000"),
+      getEnvVar("MONGODB_SERVER_SELECTION_TIMEOUT_MS"),
       10
     ),
-    socketTimeoutMS: parseInt(
-      getEnvVar("MONGODB_SOCKET_TIMEOUT_MS", "45000"),
-      10
-    ),
+    socketTimeoutMS: parseInt(getEnvVar("MONGODB_SOCKET_TIMEOUT_MS"), 10),
   },
   redis: {
-    host: getEnvVar("REDIS_HOST", "localhost"),
-    port: parseInt(getEnvVar("REDIS_PORT", "6379"), 10),
-    password: process.env.REDIS_PASSWORD || undefined,
+    cacheUrl: getEnvVar("REDIS_CACHE_URL"),
     maxRetriesPerRequest: parseInt(
       getEnvVar("REDIS_MAX_RETRIES_PER_REQUEST", "3"),
       10

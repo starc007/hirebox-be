@@ -3,7 +3,6 @@ import {
   completeUserProfile,
   login,
   googleOAuth,
-  googleOAuthCallback,
   refreshToken,
   getMe,
 } from "@api/controllers/authController";
@@ -11,7 +10,7 @@ import { validate } from "@api/middleware/validate";
 import {
   completeProfileSchema,
   loginSchema,
-  googleOAuthCallbackSchema,
+  googleOAuthTokenSchema,
   refreshTokenSchema,
 } from "@api/validations/authSchemas";
 import { authenticate } from "@api/middleware/auth";
@@ -28,13 +27,11 @@ router.post(
   asyncHandler(login)
 );
 
-router.get("/google", rateLimiters.standard, asyncHandler(googleOAuth));
-
-router.get(
-  "/google/callback",
+router.post(
+  "/google",
   rateLimiters.standard,
-  validate(googleOAuthCallbackSchema),
-  asyncHandler(googleOAuthCallback)
+  validate(googleOAuthTokenSchema),
+  asyncHandler(googleOAuth)
 );
 
 router.post(

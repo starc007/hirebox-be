@@ -12,7 +12,6 @@ export const logger = winston.createLogger({
     winston.format.splat(),
     winston.format.json()
   ),
-  defaultMeta: { service: "hirebox-be" },
   transports: [
     new winston.transports.File({
       filename: config.logging.errorLogPath,

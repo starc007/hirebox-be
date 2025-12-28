@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import {
   completeProfile,
   loginUser,
-  getGoogleOAuthUrl,
-  handleGoogleOAuthCallback,
+  verifyGoogleToken,
   refreshAccessToken,
   getUserById,
 } from "@services/authService";
@@ -29,20 +28,8 @@ export async function googleOAuth(
   req: Request,
   res: Response
 ): Promise<Response> {
-  const state = (req.query.state as string) || "";
-  const url = getGoogleOAuthUrl(state);
-  return sendSuccess(res, { url }, "OAuth URL generated");
-}
-
-export async function googleOAuthCallback(
-  req: Request,
-  res: Response
-): Promise<Response> {
-  const { code, state } = req.query;
-  const { user, tokens } = await handleGoogleOAuthCallback({
-    code: code as string,
-    state: state as string,
-  });
+  const { token } = req.body;
+  const { user, tokens } = await verifyGoogleToken({ token });
   return sendSuccess(res, { user, ...tokens }, "Google OAuth successful");
 }
 

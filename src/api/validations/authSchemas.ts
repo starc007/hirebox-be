@@ -68,10 +68,9 @@ export const loginSchema = z.object({
   }),
 });
 
-export const googleOAuthCallbackSchema = z.object({
-  query: z.object({
-    code: z.string().min(1, "Authorization code is required"),
-    state: z.string().optional(),
+export const googleOAuthTokenSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, "Google OAuth token is required"),
   }),
 });
 
@@ -117,9 +116,9 @@ export type CompleteProfileInput = z.infer<
   typeof completeProfileSchema
 >["body"];
 export type LoginInput = z.infer<typeof loginSchema>["body"];
-export type GoogleOAuthCallbackInput = z.infer<
-  typeof googleOAuthCallbackSchema
->["query"];
+export type GoogleOAuthTokenInput = z.infer<
+  typeof googleOAuthTokenSchema
+>["body"];
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>["body"];
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>["body"];
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>["body"];

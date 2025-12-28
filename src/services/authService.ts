@@ -7,7 +7,7 @@ import type { UserDocument, UserPayload } from "@models/User";
 import type {
   CompleteProfileInput,
   LoginInput,
-  GoogleOAuthCallbackInput,
+  GoogleOAuthTokenInput,
 } from "@api/validations/authSchemas";
 import { notFound, unauthorized, badRequest } from "@utils/errorUtils";
 
@@ -148,32 +148,17 @@ export async function loginUser(input: LoginInput): Promise<{
   return { user: userObj, tokens };
 }
 
-export function getGoogleOAuthUrl(state?: string): string {
-  const scopes = [
-    "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/userinfo.profile",
-  ];
-
-  return oauth2Client.generateAuthUrl({
-    access_type: "offline",
-    scope: scopes,
-    state: state || "",
-    prompt: "consent",
-  });
-}
-
-export async function handleGoogleOAuthCallback(
-  input: GoogleOAuthCallbackInput
-): Promise<{
+export async function verifyGoogleToken(input: GoogleOAuthTokenInput): Promise<{
   user: Omit<UserDocument, "password">;
   tokens: { accessToken: string; refreshToken: string };
 }> {
   try {
-    // Exchange code for tokens
-    const { tokens: oauthTokens } = await oauth2Client.getToken(input.code);
-    oauth2Client.setCredentials(oauthTokens);
+    // Set the token from frontend
+    oauth2Client.setCredentials({
+      access_token: input.token,
+    });
 
-    // Get user info from Google
+    // Verify token and get user info from Google
     const oauth2 = google.oauth2({
       auth: oauth2Client,
       version: "v2",
@@ -203,6 +188,7 @@ export async function handleGoogleOAuthCallback(
       }
       user.isEmailVerified = true;
       user.lastLoginAt = new Date();
+      user.isProfileComplete = isProfileComplete(user);
       await user.save();
     } else {
       // Create new user with minimal info (profile will be completed later)
@@ -227,6 +213,7 @@ export async function handleGoogleOAuthCallback(
       companyName: user.companyName,
       agencyName: user.agencyName,
       companyNames: user.companyNames,
+      isProfileComplete: user.isProfileComplete,
     };
 
     const tokens = generateTokens(payload);
