@@ -45,6 +45,10 @@ type EnvConfig = {
     errorLogPath: string;
     combinedLogPath: string;
   };
+  zeptomail: {
+    apiKey: string;
+    otpTemplateId: string;
+  };
 };
 
 function getEnvVar(key: string, defaultValue?: string): string {
@@ -103,5 +107,9 @@ export const config: EnvConfig = {
     level: getEnvVar("LOG_LEVEL", ""),
     errorLogPath: getEnvVar("LOG_ERROR_PATH", "logs/error.log"),
     combinedLogPath: getEnvVar("LOG_COMBINED_PATH", "logs/combined.log"),
+  },
+  zeptomail: {
+    apiKey: getEnvVar("ZOHO_EMAIL_AUTH_KEY"),
+    otpTemplateId: getEnvVar("ZOHO_OTP_TEMPLATE_KEY"),
   },
 };
