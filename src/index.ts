@@ -10,13 +10,18 @@ import { logger } from "@utils/logger";
 import { errorHandler } from "@api/middleware/errorHandler";
 import { notFoundHandler } from "@api/middleware/notFoundHandler";
 import { requestIdMiddleware } from "@api/middleware/requestId";
+import { RequestLogger } from "@api/middleware/requestLogger";
 import { timeoutMiddleware } from "@api/middleware/timeout";
 import { setupGracefulShutdown } from "@utils/gracefulShutdown";
+import authRoutes from "@api/routes/authRoutes";
 
 const app = express();
 
 // Request ID tracking (must be first)
 app.use(requestIdMiddleware);
+
+// Request logging (after request ID)
+app.use(RequestLogger);
 
 // Security middleware
 app.use(helmet());
@@ -51,7 +56,7 @@ app.get("/health", (req: express.Request, res: express.Response) => {
 });
 
 // API routes
-import authRoutes from "@api/routes/authRoutes";
+
 app.use(`/api/${config.apiVersion}/auth`, authRoutes);
 
 // Error handling middleware (must be last)

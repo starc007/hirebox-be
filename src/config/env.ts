@@ -27,7 +27,6 @@ type EnvConfig = {
     redirectUri: string;
   };
   r2: {
-    accountId: string;
     accessKeyId: string;
     secretAccessKey: string;
     bucketName: string;
@@ -87,7 +86,6 @@ export const config: EnvConfig = {
     redirectUri: getEnvVar("GMAIL_REDIRECT_URI"),
   },
   r2: {
-    accountId: getEnvVar("R2_ACCOUNT_ID"),
     accessKeyId: getEnvVar("R2_ACCESS_KEY_ID"),
     secretAccessKey: getEnvVar("R2_SECRET_ACCESS_KEY"),
     bucketName: getEnvVar("R2_BUCKET_NAME"),
