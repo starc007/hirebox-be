@@ -8,7 +8,7 @@ export function createError(
   message: string,
   statusCode: number = 500,
   code?: string,
-  details?: unknown
+  details?: unknown,
 ): AppError {
   const error = new Error(message) as AppError;
   error.statusCode = statusCode;
@@ -58,6 +58,16 @@ export function conflict(message: string, details?: unknown): AppError {
 }
 
 /**
+ * Creates a Too Many Requests error (429)
+ */
+export function tooManyRequests(
+  message: string = "Too many requests",
+  details?: unknown,
+): AppError {
+  return createError(message, 429, "TOO_MANY_REQUESTS", details);
+}
+
+/**
  * Creates a Validation error (422)
  */
 export function validationError(message: string, details?: unknown): AppError {
@@ -69,7 +79,7 @@ export function validationError(message: string, details?: unknown): AppError {
  */
 export function internalError(
   message: string = "Internal server error",
-  details?: unknown
+  details?: unknown,
 ): AppError {
   return createError(message, 500, "INTERNAL_ERROR", details);
 }

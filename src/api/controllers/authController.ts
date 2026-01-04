@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import {
   completeProfile,
-  loginUser,
+  sendLoginOtp,
+  verifyOtpAndLogin,
   verifyGoogleToken,
   refreshAccessToken,
   getUserById,
@@ -11,22 +12,31 @@ import type { AuthenticatedRequest } from "@api/middleware/auth";
 
 export async function completeUserProfile(
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<Response> {
   const { body } = req;
   const user = await completeProfile(req.user!.userId, body);
   return sendSuccess(res, { user }, "Profile completed successfully");
 }
 
-export async function login(req: Request, res: Response): Promise<Response> {
+export async function sendOtp(req: Request, res: Response): Promise<Response> {
   const { body } = req;
-  const { user, tokens } = await loginUser(body);
+  const result = await sendLoginOtp(body);
+  return sendSuccess(res, result, "OTP sent successfully");
+}
+
+export async function verifyOtp(
+  req: Request,
+  res: Response,
+): Promise<Response> {
+  const { body } = req;
+  const { user, tokens } = await verifyOtpAndLogin(body);
   return sendSuccess(res, { user, ...tokens }, "Login successful");
 }
 
 export async function googleOAuth(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<Response> {
   const { token } = req.body;
   const { user, tokens } = await verifyGoogleToken({ token });
@@ -35,16 +45,16 @@ export async function googleOAuth(
 
 export async function refreshToken(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<Response> {
   const { refreshToken } = req.body;
-  const { accessToken } = await refreshAccessToken(refreshToken);
-  return sendSuccess(res, { accessToken }, "Token refreshed successfully");
+  const tokens = await refreshAccessToken(refreshToken);
+  return sendSuccess(res, tokens, "Token refreshed successfully");
 }
 
 export async function getMe(
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<Response> {
   const user = await getUserById(req.user!.userId);
   const userObj = user.toObject();

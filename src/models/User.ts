@@ -44,13 +44,6 @@ const userSchema = new Schema<UserDocument>(
       trim: true,
       index: true,
     },
-    password: {
-      type: String,
-      required: function (this: UserDocument) {
-        return this.provider === "email";
-      },
-      select: false,
-    },
     name: {
       type: String,
       required: false, // Will be set during profile completion
@@ -111,7 +104,7 @@ const userSchema = new Schema<UserDocument>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes for performance

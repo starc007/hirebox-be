@@ -1,12 +1,13 @@
-import bcrypt from "bcryptjs";
 import { google } from "googleapis";
 import { config } from "@config/env";
 import { User } from "@models/User";
 import { generateTokens, verifyToken } from "@utils/jwt";
+import { sendOtp, verifyOtp } from "@services/otpService";
 import type { UserDocument, UserPayload } from "@models/User";
 import type {
   CompleteProfileInput,
-  LoginInput,
+  SendOtpInput,
+  VerifyOtpInput,
   GoogleOAuthTokenInput,
 } from "@api/validations/authSchemas";
 import { notFound, unauthorized, badRequest } from "@utils/errorUtils";
@@ -14,7 +15,7 @@ import { notFound, unauthorized, badRequest } from "@utils/errorUtils";
 const oauth2Client = new google.auth.OAuth2(
   config.gmail.clientId,
   config.gmail.clientSecret,
-  config.gmail.redirectUri
+  config.gmail.redirectUri,
 );
 
 export function isProfileComplete(user: UserDocument): boolean {
@@ -48,7 +49,7 @@ export function isProfileComplete(user: UserDocument): boolean {
 
 export async function completeProfile(
   userId: string,
-  input: CompleteProfileInput
+  input: CompleteProfileInput,
 ): Promise<Omit<UserDocument, "password">> {
   const user = await User.findById(userId);
   if (!user) {
@@ -88,38 +89,51 @@ export async function completeProfile(
   return userObj;
 }
 
-export async function loginUser(input: LoginInput): Promise<{
+/**
+ * Send OTP to user's email for login
+ * @param input - Email address
+ * @returns Success status and expiry time
+ */
+export async function sendLoginOtp(input: SendOtpInput): Promise<{
+  success: boolean;
+  expiresIn: number;
+}> {
+  return await sendOtp(input.email);
+}
+
+/**
+ * Verify OTP and login user
+ * @param input - Email and OTP
+ * @returns User object and JWT tokens
+ */
+export async function verifyOtpAndLogin(input: VerifyOtpInput): Promise<{
   user: Omit<UserDocument, "password">;
   tokens: { accessToken: string; refreshToken: string };
 }> {
-  // Find user with password
-  let user = await User.findOne({ email: input.email }).select("+password");
+  // Verify OTP
+  const { email } = await verifyOtp(input.email, input.otp);
 
-  // If user doesn't exist, create one
+  // Find or create user
+  let user = await User.findOne({ email });
+
   if (!user) {
-    // Hash password
-    const hashedPassword = await bcrypt.hash(input.password, 12);
-
-    // Create minimal user
+    // Create new user on first login
     user = await User.create({
-      email: input.email,
-      password: hashedPassword,
+      email,
       name: "",
       role: "hr",
       provider: "email",
-      isEmailVerified: false,
+      isEmailVerified: true, // OTP verified means email is verified
       isProfileComplete: false,
     });
   } else {
-    // User exists - verify password
-    if (user.provider !== "email" || !user.password) {
+    // Verify user is using email provider
+    if (user.provider !== "email") {
       throw unauthorized("Please use Google OAuth to sign in");
     }
 
-    const isPasswordValid = await bcrypt.compare(input.password, user.password);
-    if (!isPasswordValid) {
-      throw unauthorized("Invalid email or password");
-    }
+    // Mark email as verified
+    user.isEmailVerified = true;
   }
 
   // Generate tokens
@@ -232,8 +246,8 @@ export async function verifyGoogleToken(input: GoogleOAuthTokenInput): Promise<{
 }
 
 export async function refreshAccessToken(
-  refreshToken: string
-): Promise<{ accessToken: string }> {
+  refreshToken: string,
+): Promise<{ accessToken: string; refreshToken: string }> {
   try {
     const payload = verifyToken(refreshToken);
 
@@ -243,7 +257,7 @@ export async function refreshAccessToken(
       throw notFound("User not found");
     }
 
-    // Generate new access token
+    // Generate new tokens with fresh user data (token rotation)
     const newPayload: UserPayload = {
       userId: user._id.toString(),
       email: user.email,
@@ -252,11 +266,12 @@ export async function refreshAccessToken(
       companyName: user.companyName,
       agencyName: user.agencyName,
       companyNames: user.companyNames,
+      isProfileComplete: user.isProfileComplete,
     };
 
-    const accessToken = generateTokens(newPayload).accessToken;
+    const tokens = generateTokens(newPayload);
 
-    return { accessToken };
+    return tokens;
   } catch (error) {
     throw unauthorized("Invalid refresh token");
   }

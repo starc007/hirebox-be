@@ -1,7 +1,8 @@
 import { Router } from "express";
 import {
   completeUserProfile,
-  login,
+  sendOtp,
+  verifyOtp,
   googleOAuth,
   refreshToken,
   getMe,
@@ -9,7 +10,8 @@ import {
 import { validate } from "@api/middleware/validate";
 import {
   completeProfileSchema,
-  loginSchema,
+  sendOtpSchema,
+  verifyOtpSchema,
   googleOAuthTokenSchema,
   refreshTokenSchema,
 } from "@api/validations/authSchemas";
@@ -21,24 +23,31 @@ const router = Router();
 
 // Public routes
 router.post(
-  "/login",
+  "/send-otp",
   rateLimiters.strict,
-  validate(loginSchema),
-  asyncHandler(login)
+  validate(sendOtpSchema),
+  asyncHandler(sendOtp),
+);
+
+router.post(
+  "/verify-otp",
+  rateLimiters.strict,
+  validate(verifyOtpSchema),
+  asyncHandler(verifyOtp),
 );
 
 router.post(
   "/google",
   rateLimiters.standard,
   validate(googleOAuthTokenSchema),
-  asyncHandler(googleOAuth)
+  asyncHandler(googleOAuth),
 );
 
 router.post(
   "/refresh",
   rateLimiters.standard,
   validate(refreshTokenSchema),
-  asyncHandler(refreshToken)
+  asyncHandler(refreshToken),
 );
 
 // Protected routes
@@ -46,7 +55,7 @@ router.post(
   "/complete-profile",
   authenticate,
   validate(completeProfileSchema),
-  asyncHandler(completeUserProfile)
+  asyncHandler(completeUserProfile),
 );
 
 router.get("/me", authenticate, asyncHandler(getMe));
