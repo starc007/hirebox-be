@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const connectGmailSchema = z.object({
   body: z.object({
-    token: z.string().min(1, "Google OAuth token is required"),
+    code: z.string().min(1, "Google OAuth authorization code is required"),
     email: z.string().email("Invalid email address").optional(),
     isPrimary: z.boolean().optional().default(false),
   }),

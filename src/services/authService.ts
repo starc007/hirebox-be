@@ -127,11 +127,6 @@ export async function verifyOtpAndLogin(input: VerifyOtpInput): Promise<{
       isProfileComplete: false,
     });
   } else {
-    // Verify user is using email provider
-    if (user.provider !== "email") {
-      throw unauthorized("Please use Google OAuth to sign in");
-    }
-
     // Mark email as verified
     user.isEmailVerified = true;
   }
@@ -194,7 +189,6 @@ export async function verifyGoogleToken(input: GoogleOAuthTokenInput): Promise<{
 
     if (user) {
       // Update existing user
-      user.provider = "google";
       user.providerId = googleUser.id;
       // Only update name if it's empty (not overwriting user's completed profile)
       if (!user.name || user.name.trim() === "") {

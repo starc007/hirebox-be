@@ -86,10 +86,11 @@ type GmailAccountResponse = Omit<
   | "schema"
 >;
 
+// @react-oauth/google uses 'postmessage' as redirect URI for popup flows
 const oauth2Client = new google.auth.OAuth2(
   config.gmail.clientId,
   config.gmail.clientSecret,
-  config.gmail.redirectUri
+  "postmessage" // Required for @react-oauth/google popup flow
 );
 
 export async function connectGmailAccount(
@@ -117,12 +118,18 @@ export async function connectGmailAccount(
   }
 
   try {
-    // Set the token from frontend
-    oauth2Client.setCredentials({
-      access_token: input.token,
-    });
+    // Exchange authorization code for tokens
+    // Note: The redirect URI in config must match what was used in the frontend OAuth flow
+    const { tokens } = await oauth2Client.getToken(input.code);
 
-    // Verify token and get user info from Google
+    if (!tokens.access_token) {
+      throw badRequest("Failed to exchange authorization code for tokens");
+    }
+
+    // Set tokens on the OAuth2 client
+    oauth2Client.setCredentials(tokens);
+
+    // Get user info from Google
     const oauth2 = google.oauth2({
       auth: oauth2Client,
       version: "v2",
@@ -130,17 +137,20 @@ export async function connectGmailAccount(
 
     const { data: googleUser } = await oauth2.userinfo.get();
 
-    if (!googleUser.email || !googleUser.id) {
-      throw badRequest("Failed to get user information from Google");
+    if (!googleUser.email) {
+      throw badRequest("Failed to get user email from Google");
     }
 
-    // Verify the email matches if provided
-    if (
-      input.email &&
-      input.email.toLowerCase() !== googleUser.email.toLowerCase()
-    ) {
-      throw badRequest("Token email does not match provided email");
+    if (!googleUser.id) {
+      throw badRequest("Failed to get user ID from Google");
     }
+
+    // Calculate token expiry if provided
+    const tokenExpiry = tokens.expiry_date
+      ? new Date(tokens.expiry_date)
+      : undefined;
+
+    const providerId = googleUser.id; // We've already checked it's not null/undefined above
 
     // Check if account already exists
     const existingAccount = await GmailAccount.findOne({
@@ -150,9 +160,11 @@ export async function connectGmailAccount(
 
     if (existingAccount) {
       // Update existing account
-      existingAccount.accessToken = input.token;
-      existingAccount.providerId = googleUser.id;
+      existingAccount.accessToken = tokens.access_token;
+      existingAccount.refreshToken = tokens.refresh_token || undefined;
+      existingAccount.tokenExpiry = tokenExpiry;
       existingAccount.status = "active";
+      existingAccount.providerId = providerId;
       existingAccount.errorMessage = undefined;
 
       if (input.isPrimary) {
@@ -186,8 +198,10 @@ export async function connectGmailAccount(
     const gmailAccount = await GmailAccount.create({
       userId: user._id,
       email: googleUser.email.toLowerCase(),
-      accessToken: input.token,
-      providerId: googleUser.id,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token || undefined,
+      tokenExpiry: tokenExpiry,
+      providerId: providerId,
       status: "active",
       isPrimary: input.isPrimary || currentAccounts === 0, // First account is primary by default
     });
@@ -199,6 +213,7 @@ export async function connectGmailAccount(
     const { accessToken, refreshToken, ...accountWithoutTokens } = accountObj;
     return accountWithoutTokens as GmailAccountResponse;
   } catch (error) {
+    console.log("error", error);
     if (error instanceof Error) {
       throw badRequest(`Failed to connect Gmail account: ${error.message}`);
     }

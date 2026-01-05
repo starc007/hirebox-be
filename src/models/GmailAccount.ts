@@ -46,8 +46,6 @@ const gmailAccountSchema = new Schema<GmailAccountDocument>(
     },
     providerId: {
       type: String,
-      required: true,
-      index: true,
     },
     status: {
       type: String,
