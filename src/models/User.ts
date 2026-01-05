@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import type { PlanType } from "@config/plans";
 
 export type UserRole = "admin" | "hr" | "viewer";
 export type AuthProvider = "email" | "google";
@@ -18,6 +19,7 @@ export type UserDocument = Document & {
   companyNames?: string[]; // For freelance HR (can work with multiple companies)
   isEmailVerified: boolean;
   isProfileComplete: boolean;
+  planType: PlanType;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -32,6 +34,7 @@ export type UserPayload = {
   agencyName?: string;
   companyNames?: string[];
   isProfileComplete?: boolean;
+  planType?: PlanType;
 };
 
 const userSchema = new Schema<UserDocument>(
@@ -97,6 +100,13 @@ const userSchema = new Schema<UserDocument>(
       default: false,
       index: true,
     },
+    planType: {
+      type: String,
+      enum: ["free", "basic", "pro"],
+      default: "free",
+      required: true,
+      index: true,
+    },
 
     lastLoginAt: {
       type: Date,
@@ -104,7 +114,7 @@ const userSchema = new Schema<UserDocument>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 // Indexes for performance

@@ -15,7 +15,7 @@ import { notFound, unauthorized, badRequest } from "@utils/errorUtils";
 const oauth2Client = new google.auth.OAuth2(
   config.gmail.clientId,
   config.gmail.clientSecret,
-  config.gmail.redirectUri,
+  config.gmail.redirectUri
 );
 
 export function isProfileComplete(user: UserDocument): boolean {
@@ -49,7 +49,7 @@ export function isProfileComplete(user: UserDocument): boolean {
 
 export async function completeProfile(
   userId: string,
-  input: CompleteProfileInput,
+  input: CompleteProfileInput
 ): Promise<Omit<UserDocument, "password">> {
   const user = await User.findById(userId);
   if (!user) {
@@ -228,6 +228,7 @@ export async function verifyGoogleToken(input: GoogleOAuthTokenInput): Promise<{
       agencyName: user.agencyName,
       companyNames: user.companyNames,
       isProfileComplete: user.isProfileComplete,
+      planType: user.planType,
     };
 
     const tokens = generateTokens(payload);
@@ -246,7 +247,7 @@ export async function verifyGoogleToken(input: GoogleOAuthTokenInput): Promise<{
 }
 
 export async function refreshAccessToken(
-  refreshToken: string,
+  refreshToken: string
 ): Promise<{ accessToken: string; refreshToken: string }> {
   try {
     const payload = verifyToken(refreshToken);
@@ -267,6 +268,7 @@ export async function refreshAccessToken(
       agencyName: user.agencyName,
       companyNames: user.companyNames,
       isProfileComplete: user.isProfileComplete,
+      planType: user.planType,
     };
 
     const tokens = generateTokens(newPayload);

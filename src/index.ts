@@ -14,6 +14,7 @@ import { RequestLogger } from "@api/middleware/requestLogger";
 import { timeoutMiddleware } from "@api/middleware/timeout";
 import { setupGracefulShutdown } from "@utils/gracefulShutdown";
 import authRoutes from "@api/routes/authRoutes";
+import gmailAccountRoutes from "@api/routes/gmailAccountRoutes";
 
 const app = express();
 
@@ -56,8 +57,8 @@ app.get("/health", (req: express.Request, res: express.Response) => {
 });
 
 // API routes
-
 app.use(`/api/${config.apiVersion}/auth`, authRoutes);
+app.use(`/api/${config.apiVersion}/gmail-accounts`, gmailAccountRoutes);
 
 // Error handling middleware (must be last)
 app.use(notFoundHandler);
