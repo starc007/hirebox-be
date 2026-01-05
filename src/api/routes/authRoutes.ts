@@ -24,7 +24,7 @@ const router = Router();
 // Public routes
 router.post(
   "/send-otp",
-  rateLimiters.strict,
+  // rateLimiters.strict,
   validate(sendOtpSchema),
   asyncHandler(sendOtp),
 );

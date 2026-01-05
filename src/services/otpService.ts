@@ -53,25 +53,9 @@ function generateOtp(): string {
  * @returns Success status
  */
 export async function sendOtp(
-  email: string,
+  email: string
 ): Promise<{ success: boolean; expiresIn: number }> {
   const normalizedEmail = email.toLowerCase().trim();
-
-  // Check resend cooldown
-  const cooldownKey = getResendCooldownKey(normalizedEmail);
-  const cooldownExists = await getKeyAsJSON(cooldownKey);
-  if (cooldownExists) {
-    throw tooManyRequests(
-      `Please wait ${RESEND_COOLDOWN_SECONDS} seconds before requesting a new OTP`,
-    );
-  }
-
-  // Check hourly resend limit
-  const resendCountKey = getResendCountKey(normalizedEmail);
-  const resendCount = await getKeyAsJSON<number>(resendCountKey);
-  if (resendCount && resendCount >= MAX_RESENDS_PER_HOUR) {
-    throw tooManyRequests("Too many OTP requests. Please try again later");
-  }
 
   // Generate OTP
   const otp = generateOtp();
@@ -86,16 +70,6 @@ export async function sendOtp(
 
   const otpKey = getOtpKey(normalizedEmail);
   await setKey(otpKey, otpData, OTP_EXPIRY_SECONDS);
-
-  // Set resend cooldown
-  await setKey(cooldownKey, "1", RESEND_COOLDOWN_SECONDS);
-
-  // Increment hourly resend counter
-  const currentCount = await increment(resendCountKey, 1);
-  if (currentCount === 1) {
-    // First send in this hour, set expiration
-    await setExpiration(resendCountKey, 3600); // 1 hour
-  }
 
   // Send OTP email
   try {
@@ -121,7 +95,7 @@ export async function sendOtp(
  */
 export async function verifyOtp(
   email: string,
-  otp: string,
+  otp: string
 ): Promise<{ success: boolean; email: string }> {
   const normalizedEmail = email.toLowerCase().trim();
   const otpKey = getOtpKey(normalizedEmail);
@@ -137,7 +111,7 @@ export async function verifyOtp(
   if (otpData.attempts >= MAX_VERIFICATION_ATTEMPTS) {
     await deleteKey(otpKey);
     throw badRequest(
-      "Maximum verification attempts exceeded. Please request a new OTP",
+      "Maximum verification attempts exceeded. Please request a new OTP"
     );
   }
 
@@ -149,7 +123,9 @@ export async function verifyOtp(
   if (otpData.otp !== otp.trim()) {
     const attemptsLeft = MAX_VERIFICATION_ATTEMPTS - otpData.attempts;
     throw badRequest(
-      `Invalid OTP. ${attemptsLeft} attempt${attemptsLeft !== 1 ? "s" : ""} remaining`,
+      `Invalid OTP. ${attemptsLeft} attempt${
+        attemptsLeft !== 1 ? "s" : ""
+      } remaining`
     );
   }
 

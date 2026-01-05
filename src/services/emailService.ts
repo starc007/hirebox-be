@@ -3,7 +3,7 @@ import { SendMailClient } from "zeptomail";
 import { logger } from "@/utils/logger";
 import { internalError } from "@/utils/errorUtils";
 
-const url = "https://api.zeptomail.in/v1.1/email";
+const url = "https://api.zeptomail.in/v1.1/email/template";
 const token = config.zeptomail.apiKey;
 
 const client = new SendMailClient({
@@ -46,7 +46,7 @@ export async function sendOtpEmail(
 
     logger.info(`Sending OTP email to ${email}`);
 
-    const response = (await client.sendMailWithTemplate({
+    const emailPayload = {
       template_key: config.zeptomail.otpTemplateId,
       from: {
         address: config.email.fromEmail,
@@ -56,14 +56,19 @@ export async function sendOtpEmail(
         {
           email_address: {
             address: email,
-            name: "",
+            name: "Test",
           },
         },
       ],
       merge_info: {
-        otp: otp,
+        OTP: otp,
+        valid_time: "5 minutes",
       },
-    })) as ZeptomailResponse;
+    };
+
+    const response = (await client.sendMailWithTemplate(
+      emailPayload
+    )) as ZeptomailResponse;
 
     const messageId = response?.data?.queued_at as string | undefined;
 
@@ -76,6 +81,7 @@ export async function sendOtpEmail(
       messageId,
     };
   } catch (error) {
+    console.error("Failed to send OTP email:", JSON.stringify(error));
     const errorMessage =
       error instanceof Error ? error.message : "Failed to send OTP email";
 
